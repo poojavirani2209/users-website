@@ -9,6 +9,8 @@ class App extends Component {
     this.state = {
       searchField: "",
       users: [],
+      loading: false,
+      error:false
     };
     this.searchFieldChange = this.searchFieldChange.bind(this);
   }
@@ -19,25 +21,40 @@ class App extends Component {
     });
   }
 
-  fetchUsersList() {
-    fetch("https://jsonplaceholder.typicode.com/users")
-      .then((response) => {
-        return response.json();
-      })
-      .then((data) => {
-        this.setState({ users: data });
-      });
+  async fetchUsersList() {
+    return await (
+      await fetch("https://jsonplaceholder.typicode.com/users").catch((e)=>{this.setState({error:true})})
+    ).json();
   }
 
   componentDidMount() {
-    this.fetchUsersList();
+    this.setState({ loading: true });
+    this.fetchUsersList().then((data) => {
+      this.setState({ users: data });
+      this.setState({ loading: false });
+    });
   }
 
   render() {
     return (
       <div className="App">
-        <Search className="users-search-box" searchFieldChange={this.searchFieldChange} />
-        <Users users={this.state.users} searchField={this.state.searchField} />
+        {this.state.loading ? (
+          <p>Loading...</p>
+        ) : (
+          <>
+            <Search
+              className="users-search-box"
+              searchFieldChange={this.searchFieldChange}
+            />
+            <Users
+              users={this.state.users}
+              searchField={this.state.searchField}
+            />
+          </>
+        )}
+        {
+          this.state.error && <p>Error....</p>
+        }
       </div>
     );
   }
